@@ -1,4 +1,5 @@
 import logging
+import os
 import socket
 import sys
 import time
@@ -9,20 +10,22 @@ from loguru import logger
 from tqdm import tqdm, trange
 from paho.mqtt.client import Client
 import threading
+import configparser
 
 
 class HUB:
-	def __init__(self, config_file='./hub_config'):
+	def __init__(self, config_file='./hub_config.ini'):
 		logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - [%(levelname)s]: %(message)s', handlers=[logging.FileHandler("log.txt"),
 																												logging.StreamHandler()])
 		log_format = '<green>{time: YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level}: {message}</level>'
 		logger.remove()
 		logger.add(sys.stdout, format=log_format, colorize=True)
 		config_loader = ConfigurationLoader(config_file)
-		configs = config_loader.load_configuration('mqtt_broker', 'mqtt_topic', 'mqtt_id')
-		self.mqtt_broker = configs['mqtt_broker']
-		self.mqtt_topic = configs['mqtt_topic']
-		mqtt_id = configs['mqtt_id']
+		logger.add(os.path.join(config_loader['logging']['logs_path'], 'log_{time: YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
+		config = configparser.ConfigParser()
+		self.mqtt_broker = config['mqtt']['mqtt_broker']
+		self.mqtt_topic = config['mqtt']['mqtt_topic']
+		mqtt_id = config['mqtt']['mqtt_id']
 		self.mqtt_client = Client(client_id=mqtt_id)
 		self.mqtt_client.enable_logger(logger)
 		self.mqtt_client.on_message = self.toggle_bulbs
