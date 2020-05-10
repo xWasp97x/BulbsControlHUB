@@ -4,3 +4,4 @@ services:
     build: .
     volumes:
     - ./logs:/logs
+    network_mode: host
