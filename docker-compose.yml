@@ -1,0 +1,6 @@
+version: '3'
+services:
+  hub:
+    build: .
+    volumes:
+    - ./hub_logs:/logs

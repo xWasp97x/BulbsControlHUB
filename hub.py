@@ -1,10 +1,8 @@
-import logging
 import os
 import socket
 import sys
 import time
 from yeelight import Bulb
-from configuration_loader import ConfigurationLoader
 from pyroute2 import IPRoute
 from loguru import logger
 from tqdm import tqdm, trange
@@ -15,14 +13,11 @@ import configparser
 
 class HUB:
 	def __init__(self, config_file='./hub_config.ini'):
-		logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - [%(levelname)s]: %(message)s', handlers=[logging.FileHandler("log.txt"),
-																												logging.StreamHandler()])
 		log_format = '<green>{time: YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level}: {message}</level>'
 		logger.remove()
 		logger.add(sys.stdout, format=log_format, colorize=True)
-		config_loader = ConfigurationLoader(config_file)
-		logger.add(os.path.join(config_loader['logging']['logs_path'], 'log_{time: YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
 		config = configparser.ConfigParser()
+		logger.add(os.path.join(config['logging']['logs_path'], 'log_{time: YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
 		self.mqtt_broker = config['mqtt']['mqtt_broker']
 		self.mqtt_topic = config['mqtt']['mqtt_topic']
 		mqtt_id = config['mqtt']['mqtt_id']
