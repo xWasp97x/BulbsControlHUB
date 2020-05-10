@@ -3,4 +3,4 @@ services:
   hub:
     build: .
     volumes:
-    - ./hub_logs:/logs
+    - ./logs:/logs
