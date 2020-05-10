@@ -112,12 +112,13 @@ class HUB:
 		logger.info('All bulbs toggled.')
 
 	def loop(self):
-		try:
-			self.bulbs = self.get_bulbs_ips()
-			time.sleep(5)
-		except Exception as e:
-			logger.critical(f"Unhandled exception: {e}")
-			time.sleep(1)
+		while True:
+			try:
+				self.bulbs = self.get_bulbs_ips()
+				time.sleep(5)
+			except Exception as e:
+				logger.critical(f"Unhandled exception: {e}")
+				time.sleep(1)
 
 
 hub = HUB()
