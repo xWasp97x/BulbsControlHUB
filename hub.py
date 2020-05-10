@@ -5,7 +5,7 @@ import time
 from yeelight import Bulb
 from pyroute2 import IPRoute
 from loguru import logger
-from tqdm import tqdm, trange
+from tqdm import trange
 from paho.mqtt.client import Client
 import threading
 import configparser
@@ -17,6 +17,7 @@ class HUB:
 		logger.remove()
 		logger.add(sys.stdout, format=log_format, colorize=True)
 		config = configparser.ConfigParser()
+		config.read(config_file)
 		logger.add(os.path.join(config['logging']['logs_path'], 'log_{time: YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
 		self.mqtt_broker = config['mqtt']['mqtt_broker']
 		self.mqtt_topic = config['mqtt']['mqtt_topic']
