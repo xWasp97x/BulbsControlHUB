@@ -21,6 +21,7 @@ class HUB:
 		logger.add(os.path.join(config['logging']['logs_path'], 'log_{time: YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
 		self.mqtt_broker = config['mqtt']['mqtt_broker']
 		self.mqtt_topic = config['mqtt']['mqtt_topic']
+		self.scan_rate = int(config['scanning']['rate'])
 		mqtt_id = config['mqtt']['mqtt_id']
 		self.mqtt_client = Client(client_id=mqtt_id)
 		self.mqtt_client.enable_logger(logger)
@@ -52,7 +53,7 @@ class HUB:
 				 'addr': x.get_attr('IFA_ADDRESS'),
 				 'mask': x['prefixlen']} for x in ip_scanner.get_addr()]
 		ip_scanner.close()
-
+		logger.debug(f"Available interfaces: {info}")
 		subnet = None
 		for interface in info:
 			if '192.168' in interface['addr']:
@@ -112,10 +113,11 @@ class HUB:
 		logger.info('All bulbs toggled.')
 
 	def loop(self):
+		SCAN_RATE = self.scan_rate
 		while True:
 			try:
 				self.bulbs = self.get_bulbs_ips()
-				time.sleep(5)
+				time.sleep(SCAN_RATE)
 			except Exception as e:
 				logger.critical(f"Unhandled exception: {e}")
 				time.sleep(1)
