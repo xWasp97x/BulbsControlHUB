@@ -3,6 +3,6 @@ services:
   hub:
     build: .
     volumes:
-    - ./logs:/logs
-    - ./config:/config
+    - ./logs:/app/logs
+    - ./config:/app/config
     network_mode: host
