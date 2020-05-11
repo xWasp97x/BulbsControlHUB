@@ -5,7 +5,6 @@ import time
 from yeelight import Bulb
 from pyroute2 import IPRoute
 from loguru import logger
-from tqdm import trange
 from paho.mqtt.client import Client
 import threading
 import configparser
@@ -140,12 +139,8 @@ class HUB:
 				time.sleep(1)
 
 
-hub = HUB()
+if len(sys.argv) > 1:
+	hub = HUB(sys.argv[1])
+else:
+	hub = HUB()
 hub.mqtt_client.loop_forever()
-
-
-
-
-
-
-
