@@ -16,6 +16,9 @@ class HUB:
 		logger.remove()
 		logger.add(sys.stdout, format=log_format, colorize=True)
 		config = configparser.ConfigParser()
+		if not os.path.isfile(config_file):
+			logger.critical(f"Cannot find '{config_file}', aborting...")
+			exit(1)
 		config.read(config_file)
 		logger.add(os.path.join(config['logging']['logs_path'], 'log_{time: YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
 		self.mqtt_broker = config['mqtt']['mqtt_broker']
