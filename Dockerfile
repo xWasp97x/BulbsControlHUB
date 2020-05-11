@@ -6,4 +6,4 @@ RUN pip3.8 install --no-cache-dir -r requirements.txt
 COPY hub.py ./
 COPY hub_config.ini ./config/
 
-CMD ["python3.8", "/app/hub.py ./config/hub_config.ini"]
+CMD ["python3.8", "/app/hub.py", "./config/hub_config.ini"]
