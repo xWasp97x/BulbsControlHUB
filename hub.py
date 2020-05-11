@@ -22,6 +22,7 @@ class HUB:
 		self.mqtt_broker = config['mqtt']['mqtt_broker']
 		self.mqtt_topic = config['mqtt']['mqtt_topic']
 		self.scan_rate = int(config['scanning']['rate'])
+		self.max_threads = int(config['scanning']['threads'])
 		mqtt_id = config['mqtt']['mqtt_id']
 		self.mqtt_client = Client(client_id=mqtt_id)
 		self.mqtt_client.enable_logger(logger)
@@ -29,8 +30,8 @@ class HUB:
 		self.mqtt_client.on_connect = self.mqtt_subscribe
 		self.mqtt_client.on_disconnect = self.mqtt_connect
 		self.mqtt_connect()
-		self.bulbs = None
 		self.loop_thread = threading.Thread(target=self.loop)
+		self.bulbs = []  # [{'hostname': '<>', 'ip': '<>'}]
 		self.loop_thread.start()
 
 	def mqtt_connect(self):
@@ -53,12 +54,37 @@ class HUB:
 				 'addr': x.get_attr('IFA_ADDRESS'),
 				 'mask': x['prefixlen']} for x in ip_scanner.get_addr()]
 		ip_scanner.close()
-		logger.debug(f"Available interfaces: {info}")
 		subnet = None
 		for interface in info:
 			if '192.168' in interface['addr']:
 				subnet = f'192.168.{interface["addr"].split(".")[2]}'
 				return subnet
+
+	def scanner(self, ips_list):
+		for ip in ips_list:
+			try:
+				hostname = socket.gethostbyaddr(ip)[0]
+				if 'yeelink' in hostname:
+					self.bulbs.append({'hostname': hostname, 'ip': ip})
+					logger.info(f'Found new bulb: {hostname} at {ip}')
+			except socket.herror as se:
+				if 'Unknown host' not in str(se):
+					logger.error(str(se))
+
+	def spawn_scanners(self, ips: list):
+		max_threads = self.max_threads
+		ips_for_thread = int(len(ips)/max_threads)
+		limits = [i*ips_for_thread for i in range(max_threads)]
+		ranges = [ips[limit: limit+ips_for_thread+1] for limit in limits]
+		threads = []
+		for r in ranges:
+			t = threading.Thread(target=self.scanner, args=(r,))
+			t.start()
+			threads.append(t)
+
+		t: threading.Thread
+		for t in threads:
+			t.join()
 
 	def get_bulbs_ips(self):
 		logger.info('Scanning network for bulbs...')
@@ -71,20 +97,11 @@ class HUB:
 		#subnet = '192.168.178'
 		logger.debug(f'Subnet: {subnet}')
 
-		bulbs = list()  # [{'hostname': '<>', 'ip': '<>'}]
+		ips = [f"{subnet}.{i}" for i in range(0, 256)]
 
-		progressbar = trange(256, desc='', leave=True)
-		for subnet_ip in progressbar:
-			try:
-				ip = f'{subnet}.{subnet_ip}'
-				progressbar.set_description(f'Scanning {ip}')
-				hostname = socket.gethostbyaddr(ip)[0]
-				if 'yeelink' in hostname:
-					bulbs.append({'hostname': hostname, 'ip': ip})
-					logger.info(f'Found new bulb: {hostname} at {ip}')
-			except socket.herror as se:
-				if 'Unknown host' not in str(se):
-					logger.error(str(se))
+		self.spawn_scanners(ips)
+
+		bulbs = self.bulbs
 
 		result = [f"hostname: {bulb['hostname']}, ip: {bulb['ip']}" for bulb in bulbs]
 		if len(bulbs) > 0:
