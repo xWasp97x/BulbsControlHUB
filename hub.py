@@ -12,7 +12,7 @@ import configparser
 
 class HUB:
 	def __init__(self, config_file='./hub_config.ini'):
-		log_format = '<green>{time: YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level}: {message}</level>'
+		log_format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> <level>{level}: {message}</level>'
 		logger.remove()
 		logger.add(sys.stdout, format=log_format, colorize=True)
 		config = configparser.ConfigParser()
@@ -20,7 +20,7 @@ class HUB:
 			logger.critical(f"Cannot find '{config_file}', aborting...")
 			exit(1)
 		config.read(config_file)
-		logger.add(os.path.join(config['logging']['logs_path'], 'log_{time: YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
+		logger.add(os.path.join(config['logging']['logs_path'], 'log_{time:YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
 		self.mqtt_broker = config['mqtt']['mqtt_broker']
 		self.mqtt_topic = config['mqtt']['mqtt_topic']
 		self.scan_rate = int(config['scanning']['rate'])
