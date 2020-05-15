@@ -33,6 +33,7 @@ class HUB:
 		self.mqtt_client.on_disconnect = self.mqtt_connect
 		self.mqtt_connect()
 		self.bulbs = []  # [{'hostname': '<>', 'ip': '<>'}]
+		self.threads_buffer = []
 		self.loop()
 
 	def mqtt_connect(self):
@@ -66,7 +67,7 @@ class HUB:
 			try:
 				hostname = socket.gethostbyaddr(ip)[0]
 				if 'yeelink' in hostname:
-					self.bulbs.append({'hostname': hostname, 'ip': ip})
+					self.threads_buffer.append({'hostname': hostname, 'ip': ip})
 					logger.info(f'Found new bulb: {hostname} at {ip}')
 			except socket.herror as se:
 				if 'Unknown host' not in str(se):
@@ -100,11 +101,11 @@ class HUB:
 
 		ips = [f"{subnet}.{i}" for i in range(0, 256)]
 
-		self.bulbs = []
+		self.threads_buffer = []
 
 		self.spawn_scanners(ips)
 
-		bulbs = self.bulbs
+		bulbs = self.threads_buffer
 
 		result = [f"hostname: {bulb['hostname']}, ip: {bulb['ip']}" for bulb in bulbs]
 		if len(bulbs) > 0:
