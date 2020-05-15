@@ -32,9 +32,8 @@ class HUB:
 		self.mqtt_client.on_connect = self.mqtt_subscribe
 		self.mqtt_client.on_disconnect = self.mqtt_connect
 		self.mqtt_connect()
-		self.loop_thread = threading.Thread(target=self.loop)
 		self.bulbs = []  # [{'hostname': '<>', 'ip': '<>'}]
-		self.loop_thread.start()
+		self.loop()
 
 	def mqtt_connect(self):
 		logger.debug(f'Connecting to MQTT broker {self.mqtt_broker}...')
