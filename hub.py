@@ -34,6 +34,7 @@ class HUB:
 		self.mqtt_client.on_message = self.toggle_bulbs
 		self.mqtt_client.on_connect = self.mqtt_subscribe
 		self.mqtt_client.on_disconnect = self.mqtt_connect
+		self.mqtt_client.loop_start()
 		self.mqtt_connect()
 		self.bulbs = []  # [{'hostname': '<>', 'ip': '<>'}]
 		self.threads_buffer = []
@@ -136,12 +137,26 @@ class HUB:
 			self.toggle_bulb(bulb)
 		logger.info('All bulbs toggled.')
 
+	def check_mqtt_connection(self):
+		logger.debug("Checking mqtt broker connection...")
+		if not self.mqtt_client.is_connected():
+			logger.warning("Broker connection error, trying reconnection...")
+			self.mqtt_client.reconnect()
+		if not self.mqtt_client.is_connected():
+			logger.error("Reconnection error")
+
 	def loop(self):
 		SCAN_RATE = self.scan_rate
 		while True:
 			try:
 				self.bulbs = self.get_bulbs_ips()
 				time.sleep(SCAN_RATE)
+			except KeyboardInterrupt as ki:
+				logger.critical("HUB killed, stopping mqtt loop...")
+				try:
+					self.mqtt_client.loop_stop()
+				except:
+					self.mqtt_client.loop_stop(force=True)
 			except Exception as e:
 				logger.critical(f"Unhandled exception: {e}")
 				time.sleep(1)
@@ -151,4 +166,3 @@ if len(sys.argv) > 1:
 	hub = HUB(sys.argv[1])
 else:
 	hub = HUB()
-hub.mqtt_client.loop_forever()
