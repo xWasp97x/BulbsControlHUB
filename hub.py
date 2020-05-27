@@ -21,11 +21,14 @@ class HUB:
 			exit(1)
 		config.read(config_file)
 		logger.add(os.path.join(config['logging']['logs_path'], 'log_{time:YYYY-MM-DD}.log'), format=log_format, colorize=True, compression='zip', rotation='00:00')
+		logger.info('Booting up...')
 		self.mqtt_broker = config['mqtt']['mqtt_broker']
 		self.mqtt_topic = config['mqtt']['mqtt_topic']
 		self.scan_rate = int(config['scanning']['rate'])
 		self.max_threads = int(config['scanning']['threads'])
+		logger.info(f"[Scan configuration]:\nScan rate: {self.scan_rate}s\nScan threads: {self.max_threads}")
 		mqtt_id = config['mqtt']['mqtt_id']
+		logger.info(f"[MQTT configuration]\nBroker: {self.mqtt_broker}\nTopic: {self.mqtt_topic}\nID: {mqtt_id}")
 		self.mqtt_client = Client(client_id=mqtt_id)
 		self.mqtt_client.enable_logger(logger)
 		self.mqtt_client.on_message = self.toggle_bulbs
