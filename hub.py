@@ -38,6 +38,7 @@ class HUB:
 		self.mqtt_connect()
 		self.bulbs = []  # [{'hostname': '<>', 'ip': '<>'}]
 		self.threads_buffer = []
+		self.startup()
 		self.loop()
 
 	def mqtt_connect(self):
@@ -160,6 +161,22 @@ class HUB:
 			except Exception as e:
 				logger.critical(f"Unhandled exception: {e}")
 				time.sleep(1)
+
+	def turn_off_bulbs(self):
+		logger.info("Turning off bulbs...")
+		for bulb in self.bulbs:
+			bulb_obj = Bulb(bulb['ip'])
+			response = bulb_obj.turn_off()
+			if response == 'ok':
+				logger.info(f'{bulb["hostname"]} turned off at {bulb["ip"]}')
+			else:
+				logger.error(f'Turn off error for {bulb["hostname"]} at {bulb["ip"]}')
+
+	def startup(self):
+		logger.info("Setting up...")
+		self.bulbs = self.get_bulbs_ips()
+		self.turn_off_bulbs()
+
 
 
 if len(sys.argv) > 1:
